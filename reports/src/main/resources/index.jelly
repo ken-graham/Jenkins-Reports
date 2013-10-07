@@ -4,5 +4,5 @@
   Since we don't really have anything dynamic here, let's just use static HTML. 
 -->
 <div>
-  Report on your current hudson configuration
+  Report on your current jenkins configuration
 </div>

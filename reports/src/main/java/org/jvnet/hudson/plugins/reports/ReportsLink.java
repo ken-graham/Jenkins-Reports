@@ -149,23 +149,37 @@ public class ReportsLink implements RootAction {
 		map.putAll(getAssignedNode());
 		return map;
 	}
-	public Map getSubversion() {
+	public Map getSCM() {
 		TreeMap<String,String> map = new TreeMap<String,String>();
 		Hudson hudson=Hudson.getInstance();
 		List<AbstractProject<?, ?>> items = (List)Hudson.getInstance().getItems(AbstractProject.class);
 		for (AbstractProject<?, ?> item: items) {
 			int counter = 0;
-try {
-			if (item.getScm().getClass().getName().indexOf("SubversionSCM")<0) continue;
-			Method get_locations=item.getScm().getClass().getMethod("getLocations");
-			LOGGER.log(SEVERE,"get_locations="+get_locations);
+			try {
+				String scm_name=item.getScm().getClass().getName();
+				if (scm_name.endsWith("hudson.plugins.SubversionSCM")) {
+					Method get_locations=item.getScm().getClass().getMethod("getLocations");
+					LOGGER.log(SEVERE,"svn:getLocations="+get_locations);
 
-				for (Object location: (Object[])(get_locations.invoke(item.getScm()))) {
-					map.put(item.getName()+" "+(counter++),location.toString());
+					for (Object location: (Object[])(get_locations.invoke(item.getScm()))) {
+						map.put(item.getName()+" "+(counter++),location.toString());
+					}
+				} else if (scm_name.endsWith("hudson.plugins.bazaar")) {
+					Method get_source=item.getScm().getClass().getMethod("getSource");
+					LOGGER.log(SEVERE,"bazaar:getSource="+get_locations);
+
+					map.put(item.getName()+" "+(counter++), get_source.invoke(item.getScm()));
+				} else if (scm_name.endsWith("hudson.plugins.git.gitSCM")) {
+					Method get_repositories=item.getScm().getClass().getMethod("getRepositories");
+					LOGGER.log(SEVERE,"git:getRepositories="+get_repositories);
+
+					for (Object location: (Object[])(get_repositories.invoke(item.getScm()))) {
+						map.put(item.getName()+" "+(counter++),location.toString());
+					}
 				}
-} catch (Throwable t) {
-LOGGER.log(SEVERE,"caught:"+t);
-}
+			} catch (Throwable t) {
+				LOGGER.log(SEVERE,"caught:"+t);
+			}
 		}
 		return map;
 	}
