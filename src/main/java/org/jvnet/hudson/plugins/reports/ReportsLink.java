@@ -166,9 +166,9 @@ public class ReportsLink implements RootAction {
 					}
 				} else if (scm_name.endsWith("hudson.plugins.bazaar")) {
 					Method get_source=item.getScm().getClass().getMethod("getSource");
-					LOGGER.log(SEVERE,"bazaar:getSource="+get_locations);
+					LOGGER.log(SEVERE,"bazaar:getSource="+get_source);
 
-					map.put(item.getName()+" "+(counter++), get_source.invoke(item.getScm()));
+					map.put(item.getName()+" "+(counter++), get_source.invoke(item.getScm()).toString());
 				} else if (scm_name.endsWith("hudson.plugins.git.gitSCM")) {
 					Method get_repositories=item.getScm().getClass().getMethod("getRepositories");
 					LOGGER.log(SEVERE,"git:getRepositories="+get_repositories);
