@@ -157,16 +157,17 @@ public class ReportsLink implements RootAction {
 	private final void process_scm(TreeMap<String,String> map, String job_name, SCM scm) 
 	throws Exception,Error
 	{
-		process_scm2(map, job_name, "", scm);
+		process_scm2(map, job_name, 0, "", scm);
 	}
-	private final void process_scm2(TreeMap<String,String> map, String job_name, String scm_prefix, SCM scm) 
+	private final void process_scm2(TreeMap<String,String> map, String job_name, int counter, String scm_prefix, SCM scm) 
 	throws Exception,Error
 	{
-		int counter = 0;
 		String scm_name=scm.getClass().getName();
 LOGGER.log(SEVERE,"scm_name="+scm_name);
 		String scm_simple_name=scm_name;
-		if (scm_name.endsWith("hudson.scm.SubversionSCM")) { // Works
+		if (scm_name.endsWith("hudson.scm.NullSCM")) { // Works
+			// No SCM for this job.
+		} else if (scm_name.endsWith("hudson.scm.SubversionSCM")) { // Works
 			scm_simple_name="svn";
 			Method get_locations=scm.getClass().getMethod("getLocations");
 			LOGGER.log(SEVERE,"svn:getLocations="+get_locations);
@@ -194,7 +195,7 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 			Method get_scms=scm.getClass().getMethod("getConfiguredSCMs");
 			LOGGER.log(SEVERE,"multiplescms:getConfiguredSCMs="+get_scms);
 			for (SCM scm2: (List<SCM>)get_scms.invoke(scm)) {
-				process_scm2(map,job_name,scm_simple_name,scm2);
+				process_scm2(map,job_name,counter++,scm_simple_name,scm2);
 			}
 		} else if (scm_name.endsWith("hudson.plugins.filesystem_scm.FSSCM")) {
 			scm_simple_name="fs";
@@ -202,6 +203,8 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 			LOGGER.log(SEVERE,"FSSCM:getPath="+get_path);
 
 			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_path.invoke(scm).toString());
+		} else {
+			map.put(job_name+" "+(counter++), scm_prefix+scm_name+":???");
 		}
 	}
 	public Map getSCM() {
