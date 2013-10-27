@@ -21,11 +21,6 @@
 		<version>1.51</version>
 	</dependency>
 	<dependency>
-		<groupId>org.jvnet.hudson.plugins</groupId>
-		<artifactId>accurev</artifactId>
-		<version>0.6.18</version>
-	</dependency>
-	<dependency>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>bazaar</artifactId>
 		<version>1.22</version>
@@ -61,9 +56,20 @@
             <artifactId>plexus-utils</artifactId>
             <version>3.0.8</version>
         </dependency>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>3.1.0.201310021548-r</version>
+    </dependency>
     </dependencies>
 
     <repositories>
+	    <repository>
+	      <id>jgit-repository</id>
+	      <name>Eclipse JGit Repository</name>
+	      <url>https://repo.eclipse.org/content/groups/releases/</url>
+	    </repository>
+
         <repository>
             <id>repo.jenkins-ci.org</id>
             <url>http://repo.jenkins-ci.org/public/</url>

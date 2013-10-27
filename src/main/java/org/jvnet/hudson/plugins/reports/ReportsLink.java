@@ -24,6 +24,8 @@
 
 package org.jvnet.hudson.plugins.reports;
 
+import java.net.URI;
+
 import hudson.Extension;
 
 import hudson.model.Hudson;
@@ -63,6 +65,9 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.framework.io.LargeText;
+
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
 
 @Extension
 public class ReportsLink implements RootAction {
@@ -157,7 +162,8 @@ public class ReportsLink implements RootAction {
 			int counter = 0;
 			try {
 				String scm_name=item.getScm().getClass().getName();
-				if (scm_name.endsWith("hudson.plugins.SubversionSCM")) {
+LOGGER.log(SEVERE,"scm_name="+scm_name);
+				if (scm_name.endsWith("hudson.scm.SubversionSCM")) {
 					Method get_locations=item.getScm().getClass().getMethod("getLocations");
 					LOGGER.log(SEVERE,"svn:getLocations="+get_locations);
 
@@ -169,12 +175,13 @@ public class ReportsLink implements RootAction {
 					LOGGER.log(SEVERE,"bazaar:getSource="+get_source);
 
 					map.put(item.getName()+" "+(counter++), get_source.invoke(item.getScm()).toString());
-				} else if (scm_name.endsWith("hudson.plugins.git.gitSCM")) {
-					Method get_repositories=item.getScm().getClass().getMethod("getRepositories");
-					LOGGER.log(SEVERE,"git:getRepositories="+get_repositories);
-
-					for (Object location: (Object[])(get_repositories.invoke(item.getScm()))) {
-						map.put(item.getName()+" "+(counter++),location.toString());
+				} else if (scm_name.endsWith("hudson.plugins.git.GitSCM")) {
+					Method git_repositories=item.getScm().getClass().getMethod("getRepositories");
+					for (RemoteConfig config: (ArrayList<RemoteConfig>)git_repositories.invoke(item.getScm())) {
+						for (URIish uri: (List<URIish>)config.getURIs()) {
+							LOGGER.log(SEVERE,"git:getRemoteConfigs[x][y]="+uri);
+							map.put(item.getName()+" "+(counter++),uri.toString());
+						}
 					}
 				}
 			} catch (Throwable t) {
