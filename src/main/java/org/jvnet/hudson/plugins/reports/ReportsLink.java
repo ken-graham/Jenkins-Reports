@@ -154,36 +154,63 @@ public class ReportsLink implements RootAction {
 		map.putAll(getAssignedNode());
 		return map;
 	}
+	private final void process_scm(TreeMap<String,String> map, String job_name, SCM scm) 
+	throws Exception,Error
+	{
+		process_scm2(map, job_name, "", scm);
+	}
+	private final void process_scm2(TreeMap<String,String> map, String job_name, String scm_prefix, SCM scm) 
+	throws Exception,Error
+	{
+		int counter = 0;
+		String scm_name=scm.getClass().getName();
+LOGGER.log(SEVERE,"scm_name="+scm_name);
+		String scm_simple_name=scm_name;
+		if (scm_name.endsWith("hudson.scm.SubversionSCM")) { // Works
+			scm_simple_name="svn";
+			Method get_locations=scm.getClass().getMethod("getLocations");
+			LOGGER.log(SEVERE,"svn:getLocations="+get_locations);
+
+			for (Object location: (Object[])(get_locations.invoke(scm))) {
+				map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+location.toString());
+			}
+		} else if (scm_name.endsWith("hudson.plugins.bazaar.BazaarSCM")) {
+			scm_simple_name="bzr";
+			Method get_source=scm.getClass().getMethod("getSource");
+			LOGGER.log(SEVERE,"bazaar:getSource="+get_source);
+
+			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_source.invoke(scm).toString());
+		} else if (scm_name.endsWith("hudson.plugins.git.GitSCM")) { // Works
+			scm_simple_name="git";
+			Method git_repositories=scm.getClass().getMethod("getRepositories");
+			for (RemoteConfig config: (ArrayList<RemoteConfig>)git_repositories.invoke(scm)) {
+				for (URIish uri: (List<URIish>)config.getURIs()) {
+					LOGGER.log(SEVERE,"git:getRemoteConfigs[x][y]="+uri);
+					map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+uri.toString());
+				}
+			}
+		} else if (scm_name.endsWith("org.jenkinsci.plugins.multiplescms.MultiSCM")) {
+			scm_simple_name="M:";
+			Method get_scms=scm.getClass().getMethod("getConfiguredSCMs");
+			LOGGER.log(SEVERE,"multiplescms:getConfiguredSCMs="+get_scms);
+			for (SCM scm2: (List<SCM>)get_scms.invoke(scm)) {
+				process_scm2(map,job_name,scm_simple_name,scm2);
+			}
+		} else if (scm_name.endsWith("hudson.plugins.filesystem_scm.FSSCM")) {
+			scm_simple_name="fs";
+			Method get_path=scm.getClass().getMethod("getPath");
+			LOGGER.log(SEVERE,"FSSCM:getPath="+get_path);
+
+			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_path.invoke(scm).toString());
+		}
+	}
 	public Map getSCM() {
 		TreeMap<String,String> map = new TreeMap<String,String>();
 		Hudson hudson=Hudson.getInstance();
 		List<AbstractProject<?, ?>> items = (List)Hudson.getInstance().getItems(AbstractProject.class);
 		for (AbstractProject<?, ?> item: items) {
-			int counter = 0;
 			try {
-				String scm_name=item.getScm().getClass().getName();
-LOGGER.log(SEVERE,"scm_name="+scm_name);
-				if (scm_name.endsWith("hudson.scm.SubversionSCM")) {
-					Method get_locations=item.getScm().getClass().getMethod("getLocations");
-					LOGGER.log(SEVERE,"svn:getLocations="+get_locations);
-
-					for (Object location: (Object[])(get_locations.invoke(item.getScm()))) {
-						map.put(item.getName()+" "+(counter++),location.toString());
-					}
-				} else if (scm_name.endsWith("hudson.plugins.bazaar")) {
-					Method get_source=item.getScm().getClass().getMethod("getSource");
-					LOGGER.log(SEVERE,"bazaar:getSource="+get_source);
-
-					map.put(item.getName()+" "+(counter++), get_source.invoke(item.getScm()).toString());
-				} else if (scm_name.endsWith("hudson.plugins.git.GitSCM")) {
-					Method git_repositories=item.getScm().getClass().getMethod("getRepositories");
-					for (RemoteConfig config: (ArrayList<RemoteConfig>)git_repositories.invoke(item.getScm())) {
-						for (URIish uri: (List<URIish>)config.getURIs()) {
-							LOGGER.log(SEVERE,"git:getRemoteConfigs[x][y]="+uri);
-							map.put(item.getName()+" "+(counter++),uri.toString());
-						}
-					}
-				}
+				process_scm(map, item.getName(), item.getScm());
 			} catch (Throwable t) {
 				LOGGER.log(SEVERE,"caught:"+t);
 			}
