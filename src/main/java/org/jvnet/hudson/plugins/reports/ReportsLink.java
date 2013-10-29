@@ -29,6 +29,7 @@ import java.net.URI;
 import hudson.Extension;
 
 import hudson.model.Hudson;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Label;
 import hudson.model.ManagementLink;
@@ -203,6 +204,12 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 			LOGGER.log(SEVERE,"FSSCM:getPath="+get_path);
 
 			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_path.invoke(scm).toString());
+		} else if (scm_name.endsWith("hudson.plugins.cloneworkspace.CloneWorkspaceSCM")) {
+			scm_simple_name="cloneWS";
+			Method get_wsname=scm.getClass().getMethod("getParamParentJobName",new Class[]{AbstractBuild.class});
+			LOGGER.log(SEVERE,"cloneworkspaceSCM:getParamParentJobName="+get_wsname);
+
+			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_wsname.invoke(scm,new Object[]{null}).toString());
 		} else {
 			map.put(job_name+" "+(counter++), scm_prefix+scm_name+":???");
 		}
