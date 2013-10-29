@@ -210,6 +210,12 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 			LOGGER.log(SEVERE,"cloneworkspaceSCM:getParamParentJobName="+get_wsname);
 
 			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_wsname.invoke(scm,new Object[]{null}).toString());
+		} else if (scm_name.endsWith("hudson.plugins.mercurial.MercurialSCM")) {
+			scm_simple_name="hg";
+			Method get_source=scm.getClass().getMethod("getSource");
+			LOGGER.log(SEVERE,"mercurial:getSource="+get_source);
+
+			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_source.invoke(scm).toString());
 		} else {
 			map.put(job_name+" "+(counter++), scm_prefix+scm_name+":???");
 		}
