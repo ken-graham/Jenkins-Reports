@@ -216,6 +216,12 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 			LOGGER.log(SEVERE,"mercurial:getSource="+get_source);
 
 			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_source.invoke(scm).toString());
+		} else if (scm_name.endsWith("hudson.plugins.perforce.PerforceSCM")) {
+			scm_simple_name="p4";
+			Method get_project_path=scm.getClass().getMethod("getProjectPath");
+			LOGGER.log(SEVERE,"perforce:getProjectPath="+get_project_path);
+
+			map.put(job_name+" "+(counter++), scm_prefix+scm_simple_name+":"+get_project_path.invoke(scm).toString());
 		} else {
 			map.put(job_name+" "+(counter++), scm_prefix+scm_name+":???");
 		}
