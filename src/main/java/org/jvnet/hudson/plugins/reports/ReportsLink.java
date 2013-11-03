@@ -32,18 +32,16 @@ import hudson.model.Hudson;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Label;
-import hudson.model.ManagementLink;
 import hudson.model.RootAction;
 
-import hudson.matrix.Combination;
 import hudson.matrix.MatrixProject;
 
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 
 import hudson.scm.SCM;
-import hudson.scm.SubversionSCM;
-import hudson.scm.SubversionSCM.ModuleLocation;
+
+import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,11 +60,6 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 import static java.util.logging.Level.SEVERE;
 
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.framework.io.LargeText;
-
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
@@ -78,6 +71,7 @@ public class ReportsLink implements RootAction {
 
 	@Override
 	public String getIconFileName() {
+		if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) return null;
 		return "/plugin/reports/images/reports.gif";
 	}
 
