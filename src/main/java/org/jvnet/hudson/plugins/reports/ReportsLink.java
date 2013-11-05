@@ -32,7 +32,9 @@ import hudson.model.Hudson;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Label;
-import hudson.model.RootAction;
+import hudson.model.UnprotectedRootAction;
+
+import hudson.Plugin;
 
 import hudson.matrix.MatrixProject;
 
@@ -64,14 +66,14 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
 @Extension
-public class ReportsLink implements RootAction {
+public class ReportsLink implements UnprotectedRootAction {
 	private final static Logger LOGGER = Logger.getLogger(ReportsLink.class.getName());
 
 	private Boolean backupRunning = Boolean.FALSE;
 
 	@Override
 	public String getIconFileName() {
-		if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) return null;
+//		if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) return null;
 		return "/plugin/reports/images/reports.gif";
 	}
 
