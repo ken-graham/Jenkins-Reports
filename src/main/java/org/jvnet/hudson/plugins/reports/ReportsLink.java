@@ -34,15 +34,20 @@ import hudson.model.AbstractProject;
 import hudson.model.Label;
 //import hudson.model.UnprotectedRootAction;
 import hudson.model.Job;
+import hudson.model.AllView;
 import hudson.model.ListView;
-/*<<*/
+import hudson.model.Action;
+import hudson.model.View;
+import hudson.model.ViewGroup;
+import hudson.model.ItemGroup;
+
 import hudson.model.Item;
 import hudson.model.TopLevelItem;
 import hudson.model.ViewDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
-/*>>*/
+
 
 import hudson.Plugin;
 
@@ -75,7 +80,10 @@ import static java.util.logging.Level.SEVERE;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
-public class ReportsLink extends ListView {
+public class ReportsLink 
+extends AllView 
+//implements ViewGroup
+{
 	@DataBoundConstructor
 	public ReportsLink(String name) {
 		super(name);
@@ -83,24 +91,6 @@ public class ReportsLink extends ListView {
 
 	private final static Logger LOGGER = Logger.getLogger(ReportsLink.class.getName());
 
-/*<<*/
-
-	@Override
-	public void submit(org.kohsuke.stapler.StaplerRequest req) {
-	}
-	public List<TopLevelItem> getItems() {
-		List<TopLevelItem> base = super.getItems(),
-				result = new ArrayList<TopLevelItem>(base.size());
-		for (TopLevelItem item : base) {
-			if (item instanceof Job) {
-//				SCMTrigger trigger = ((Job)item).getTrigger(SCMTrigger.class);
-//				if (trigger!=null) {
-//					result.put(item.getName(),trigger.getSpec());
-//				}
-			}
-		}
-		return result;
-	}
 	public Map getSCMPolling() {
 		TreeMap<String,String> map = new TreeMap<String,String>();
 		Hudson hudson=Hudson.getInstance();
@@ -242,6 +232,7 @@ LOGGER.log(SEVERE,"scm_name="+scm_name);
 		}
 		return map;
 	}
+	
 	@Extension
 	public static final class DescriptorImpl extends ViewDescriptor {
 		public String getDisplayName() {
@@ -249,98 +240,20 @@ return "Reports";
 //		    return Messages.DisplayName();
 		}
 	}
+
+	// ViewGroup
+	public boolean canDelete(View view) {
+		return true;
+	}
+	public void deleteView(View view) {
+	}
+//	public String getUrl() {
+//		return "Reports";
+//	}
+	public List<Action> getViewActions() {
+		return this.getOwnerViewActions();
+	}
+	public ItemGroup<? extends TopLevelItem> getItemGroup() {
+		return this.getOwnerItemGroup();
+	}
 }
-/* *** <<
-/ *
- * The MIT License
- * 
- * Copyright (c) 2004-2010, Sun Microsystems, Inc., Alan Harder
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- * /
-package hudson.plugins.status_view;
-
-import hudson.model.Descriptor.FormException;
-import hudson.Extension;
-import hudson.model.Job;
-import hudson.model.ListView;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TopLevelItem;
-import hudson.model.ViewDescriptor;
-import java.util.ArrayList;
-import java.util.List;
-import javax.servlet.ServletException;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
-/ **
- * List view type filters jobs by status of the latest build.
- *
- * @author Alan Harder <mindless@dev.java.net>
- * /
-public class StatusView extends ListView {
-
-    private boolean stable, unstable, failed, aborted, running;
-
-    public boolean isStable() { return stable; }
-    public boolean isUnstable() { return unstable; }
-    public boolean isFailed() { return failed; }
-    public boolean isAborted() { return aborted; }
-    public boolean isRunning() { return running; }
-
-    @Override
-    public synchronized List<TopLevelItem> getItems() {
-        List<TopLevelItem> base = super.getItems(),
-                           result = new ArrayList<TopLevelItem>(base.size());
-        for (TopLevelItem item : base) {
-            if (item instanceof Job) {
-                if (running && !((Job)item).isBuilding()) continue;
-                Run lastBuild = ((Job)item).getLastCompletedBuild();
-                Result status = lastBuild!=null ? lastBuild.getResult() : null;
-                if ( (stable && status == Result.SUCCESS)
-                  || (unstable && status == Result.UNSTABLE)
-                  || (failed && status == Result.FAILURE)
-                  || (aborted && status == Result.ABORTED)
-                  || (running && status == null) 
-                    result.add(item);
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
-    protected void submit(StaplerRequest req) throws ServletException, FormException {
-        stable = req.hasParameter("status_view.stable");
-        unstable = req.hasParameter("status_view.unstable");
-        failed = req.hasParameter("status_view.failed");
-        aborted = req.hasParameter("status_view.aborted");
-        running = req.hasParameter("status_view.running");
-        super.submit(req);
-    }
-
-    @Extension
-    public static final class DescriptorImpl extends ViewDescriptor {
-        public String getDisplayName() {
-            return Messages.DisplayName();
-        }
-    }
-}
-*** >> */
